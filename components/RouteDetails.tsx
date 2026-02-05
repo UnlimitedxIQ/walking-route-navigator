@@ -1,7 +1,6 @@
 'use client';
 
-import { Route, Instruction } from '@/lib/store';
-import { ChevronRight } from 'lucide-react';
+import { Route } from '@/lib/store';
 
 interface RouteDetailsProps {
   route: Route;

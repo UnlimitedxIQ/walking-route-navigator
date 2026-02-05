@@ -29,7 +29,7 @@ export function LocationInput() {
           setShowOriginSuggestions(false);
           setLoading(false);
         },
-        (err) => {
+        () => {
           setError('Unable to get your location');
           setLoading(false);
         }
@@ -99,7 +99,6 @@ export function LocationInput() {
 
   const handleSwap = () => {
     swapOriginDestination();
-    [originInput, destinationInput] = [destinationInput, originInput];
     setOriginInput(destination?.name || '');
     setDestinationInput(origin?.name || '');
   };

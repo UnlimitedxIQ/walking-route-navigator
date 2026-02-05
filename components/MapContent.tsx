@@ -26,12 +26,12 @@ interface MapContentProps {
 
 export default function MapContent({ darkMode = false }: MapContentProps) {
   const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const markerLayersRef = useRef<L.Marker[]>([]);
-  const darkOverlayRef = useRef<HTMLDivElement | null>(null);
   const { origin, destination, routes, selectedRouteId } = useRouteStore();
 
-  // Initialize map
+  // Initialize map with light mode tiles
   useEffect(() => {
     if (!mapRef.current) {
       mapRef.current = L.map('map', {
@@ -41,7 +41,8 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
         preferCanvas: true,
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Initialize with light mode tiles
+      tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
@@ -53,41 +54,34 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
     };
   }, []);
 
-  // Apply dark mode filter to map
+  // Switch tileset based on dark mode
   useEffect(() => {
-    const mapContainer = document.getElementById('map');
-    if (!mapContainer) return;
+    if (!mapRef.current || !tileLayerRef.current) return;
+
+    // Remove current tile layer
+    mapRef.current.removeLayer(tileLayerRef.current);
 
     if (darkMode) {
-      // Remove existing overlay if any
-      const existingOverlay = mapContainer.querySelector('[data-dark-overlay]');
-      if (existingOverlay) {
-        existingOverlay.remove();
-      }
-
-      // Create dark overlay
-      const overlay = document.createElement('div');
-      overlay.setAttribute('data-dark-overlay', 'true');
-      overlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
-        pointer-events: none;
-        z-index: 400;
-        border-radius: inherit;
-      `;
-      mapContainer.appendChild(overlay);
-      darkOverlayRef.current = overlay;
+      // Use CartoDB Dark Matter tileset for night mode
+      tileLayerRef.current = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          maxZoom: 19,
+          subdomains: 'abcd',
+        }
+      ).addTo(mapRef.current);
     } else {
-      // Remove dark overlay
-      const overlay = mapContainer.querySelector('[data-dark-overlay]');
-      if (overlay) {
-        overlay.remove();
-      }
-      darkOverlayRef.current = null;
+      // Use standard OpenStreetMap for light mode
+      tileLayerRef.current = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+        }
+      ).addTo(mapRef.current);
     }
   }, [darkMode]);
 
