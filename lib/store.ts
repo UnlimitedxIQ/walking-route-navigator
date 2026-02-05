@@ -65,11 +65,13 @@ export const useRouteStore = create<RouteStore>((set, get) => ({
   setDestination: (location) => set({ destination: location }),
 
   setRoutes: (routes) => {
+    console.log('📌 setRoutes called with', routes.length, 'routes');
     const state = get();
     const routesWithFavorites = routes.map((route) => ({
       ...route,
       isFavorite: state.favorites.some((fav) => fav.id === route.id),
     }));
+    console.log('📌 Setting store with routes, first route coordinates:', routesWithFavorites[0]?.coordinates?.slice(0, 2));
     set({ routes: routesWithFavorites, selectedRouteId: routesWithFavorites[0]?.id || null });
   },
 

@@ -42,6 +42,27 @@ export function LocationInput() {
     fetchCurrentLocation();
   }, []);
 
+  // Trigger route calculation when both origin and destination are set
+  useEffect(() => {
+    if (origin && destination) {
+      console.log('🔍 useEffect triggered: Both origin and destination set, calculating routes');
+      setLoading(true);
+      setError(null);
+      (async () => {
+        try {
+          const routes = await calculateRoutes(origin, destination);
+          console.log('🔍 Routes calculated in useEffect:', routes.length);
+          setRoutes(routes);
+        } catch (err) {
+          console.error('🔍 Error calculating routes in useEffect:', err);
+          setError('Failed to calculate routes');
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [origin?.lat, origin?.lng, destination?.lat, destination?.lng, setRoutes, setLoading, setError]);
+
   // Handle origin input
   const handleOriginInput = async (value: string) => {
     setOriginInput(value);
@@ -67,35 +88,19 @@ export function LocationInput() {
   };
 
   // Handle location selection
-  const handleSelectOrigin = (location: any) => {
+  const handleSelectOrigin = async (location: any) => {
     setOrigin(location);
     setOriginInput(location.name);
     setShowOriginSuggestions(false);
-    calculateAndShowRoutes();
+    // Don't call calculateAndShowRoutes here - it will use stale origin/destination values
   };
 
-  const handleSelectDestination = (location: any) => {
+  const handleSelectDestination = async (location: any) => {
     setDestination(location);
     setDestinationInput(location.name);
     setShowDestinationSuggestions(false);
-    calculateAndShowRoutes();
+    // Don't call calculateAndShowRoutes here - it will use stale origin/destination values
   };
-
-  // Calculate routes when both locations are set
-  const calculateAndShowRoutes = useCallback(async () => {
-    if (origin && destination) {
-      setLoading(true);
-      setError(null);
-      try {
-        const routes = await calculateRoutes(origin, destination);
-        setRoutes(routes);
-      } catch (err) {
-        setError('Failed to calculate routes');
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [origin, destination, setRoutes, setLoading, setError]);
 
   const handleSwap = () => {
     swapOriginDestination();

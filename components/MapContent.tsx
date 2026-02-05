@@ -87,7 +87,12 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
 
   // Update routes on map
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current) {
+      console.log('❌ mapRef.current is null, skipping route rendering');
+      return;
+    }
+
+    console.log('🗺️ Updating routes on map, routes.length:', routes.length, 'selectedRouteId:', selectedRouteId);
 
     // Clear existing route layers
     routeLayersRef.current.forEach((layer) => layer.remove());
@@ -96,6 +101,9 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
     // Add new routes
     routes.forEach((route) => {
       const isSelected = route.id === selectedRouteId;
+      console.log(`🎨 Adding route ${route.id} with ${route.coordinates.length} coordinates, color: ${route.color}`);
+      console.log(`   First coord:`, route.coordinates[0], `Last coord:`, route.coordinates[route.coordinates.length - 1]);
+      
       const polyline = L.polyline(route.coordinates, {
         color: route.color,
         weight: isSelected ? 5 : 3,
@@ -105,6 +113,8 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
         lineCap: 'round',
         lineJoin: 'round',
       }).addTo(mapRef.current!);
+
+      console.log(`✅ Polyline added for route ${route.id}`);
 
       // Add click handler to open Google Maps
       polyline.on('click', () => {

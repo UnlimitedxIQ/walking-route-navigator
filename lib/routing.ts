@@ -1,27 +1,5 @@
 import { Location, Route, Instruction } from './store';
 
-const OSRM_BASE_URL = 'https://router.project-osrm.org';
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
-
-// Simulated OSRM mock data for demo (replace with real API in production)
-const mockRoutes = {
-  'shortest': {
-    distance: 2450,
-    duration: 1800,
-    elevation: 45,
-  },
-  'fastest': {
-    distance: 2800,
-    duration: 1500,
-    elevation: 25,
-  },
-  'safest': {
-    distance: 2650,
-    duration: 1950,
-    elevation: 30,
-  },
-};
-
 export async function searchLocation(query: string): Promise<Location[]> {
   try {
     const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
@@ -55,24 +33,35 @@ export async function getReverseGeocode(lat: number, lng: number): Promise<strin
   }
 }
 
-function generateDemoCoordinates(start: Location, end: Location, variance: number): [number, number][] {
-  const points: [number, number][] = [];
-  const steps = 20;
-  
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const baseLatOffset = Math.sin(i * 0.3) * variance;
-    const baseLngOffset = Math.cos(i * 0.3) * variance;
-    
-    const lat = start.lat + (end.lat - start.lat) * t + baseLatOffset;
-    const lng = start.lng + (end.lng - start.lng) * t + baseLngOffset;
-    points.push([lat, lng]);
+async function fetchRouteFromOSRM(
+  origin: Location,
+  destination: Location,
+  routeType: 'fastest' | 'scenery' | 'foodie'
+): Promise<{ distance: number; duration: number; elevation: number; coordinates: [number, number][] } | null> {
+  try {
+    const response = await fetch(
+      `/api/location/route?startLat=${origin.lat}&startLng=${origin.lng}&endLat=${destination.lat}&endLng=${destination.lng}&routeType=${routeType}`
+    );
+
+    if (!response.ok) {
+      console.error('OSRM route fetch failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      distance: data.distance,
+      duration: data.duration,
+      elevation: data.elevation,
+      coordinates: data.coordinates,
+    };
+  } catch (error) {
+    console.error('OSRM route fetch error:', error);
+    return null;
   }
-  
-  return points;
 }
 
-function generateInstructions(distance: number, duration: number): Instruction[] {
+function generateInstructions(distance: number, duration: number, routeType?: string): Instruction[] {
   const directions = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
   const turns = ['left', 'right', 'straight', 'slight left', 'slight right', 'u-turn'];
   const directionEmojis: { [key: string]: string } = {
@@ -98,7 +87,7 @@ function generateInstructions(distance: number, duration: number): Instruction[]
   const segmentDistance = distance / 4;
   const segmentDuration = duration / 4;
   
-  const streets = ['Main Street', 'Oak Avenue', 'Park Road', 'Market Lane', 'Riverside Path'];
+  const streets = ['Main Street', 'Oak Avenue', 'Park Road', 'Market Lane', 'Riverside Path', 'Garden Way', 'Tree Lane'];
   
   for (let i = 0; i < 4; i++) {
     const direction = directions[Math.floor(Math.random() * directions.length)];
@@ -129,32 +118,56 @@ function generateInstructions(distance: number, duration: number): Instruction[]
 
 export async function calculateRoutes(origin: Location, destination: Location): Promise<Route[]> {
   try {
+    console.log('🚶 calculateRoutes called with origin:', origin, 'destination:', destination);
     const routes: Route[] = [];
-    const colors = ['#FF6B9D', '#C06BFF', '#6BC9FF', '#6BFFA6'];
     
     const routeTypes = [
-      { type: 'shortest', color: colors[0], multiplier: 1.0 },
-      { type: 'fastest', color: colors[1], multiplier: 1.15 },
-      { type: 'safest', color: colors[2], multiplier: 1.08 },
-      { type: 'scenic', color: colors[3], multiplier: 1.2 },
+      { 
+        id: 'fastest',
+        name: 'Fastest Route',
+        emoji: '⚡',
+        color: '#FF6B9D',
+        description: 'Shortest walking time'
+      },
+      { 
+        id: 'scenery',
+        name: 'Scenery Route',
+        emoji: '🌳',
+        color: '#6BFFA6',
+        description: 'Beautiful scenic views'
+      },
+      { 
+        id: 'foodie',
+        name: 'Foodie Route',
+        emoji: '🍽️',
+        color: '#FFD93D',
+        description: 'Pass through food areas'
+      },
     ];
 
     for (let i = 0; i < routeTypes.length; i++) {
-      const { type, color, multiplier } = routeTypes[i];
-      const baseMockRoute = mockRoutes[type as keyof typeof mockRoutes] || mockRoutes.shortest;
+      const { id, name, emoji, color, description } = routeTypes[i];
       
-      const distance = Math.round(baseMockRoute.distance * (0.9 + Math.random() * 0.2) * multiplier);
-      const duration = Math.round(baseMockRoute.duration * multiplier);
-      const elevation = baseMockRoute.elevation + Math.floor(Math.random() * 20);
+      const osrmRoute = await fetchRouteFromOSRM(origin, destination, id as 'fastest' | 'scenery' | 'foodie');
+      
+      if (!osrmRoute || osrmRoute.coordinates.length === 0) {
+        console.warn(`⚠️ Failed to fetch route for ${id}, skipping`);
+        continue;
+      }
+
+      const { distance, duration, elevation, coordinates } = osrmRoute;
+      
+      console.log(`📍 Route ${id} fetched with ${coordinates.length} coordinates:`, 
+        coordinates.slice(0, 2), '...', coordinates.slice(-1));
 
       const route: Route = {
-        id: `route-${type}`,
-        name: type.charAt(0).toUpperCase() + type.slice(1) + ' Route',
+        id: `route-${id}`,
+        name: `${emoji} ${name}`,
         distance,
         duration,
         elevation,
-        coordinates: generateDemoCoordinates(origin, destination, 0.01 * (i + 1)),
-        instructions: generateInstructions(distance, duration),
+        coordinates,
+        instructions: generateInstructions(distance, duration, description),
         color,
         selected: i === 0,
         isFavorite: false,
@@ -163,6 +176,7 @@ export async function calculateRoutes(origin: Location, destination: Location): 
       routes.push(route);
     }
 
+    console.log('✅ Routes calculated:', routes.length, 'routes');
     return routes;
   } catch (error) {
     console.error('Route calculation error:', error);
