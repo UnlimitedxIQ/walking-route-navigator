@@ -99,67 +99,81 @@ npm stop
 
 ---
 
-### Feature 3: Dark Mode Map Darkening 🌙
+### Feature 3: Dark Mode with Night-Themed Tileset 🌙
 
 #### Test 3a: Dark Mode Toggle Works
 1. Open the app with light mode active
-2. Look at the map - should show normal, bright OpenStreetMap tiles
+2. Look at the map - should show bright, colorful OpenStreetMap tiles
 3. Click the theme toggle button (sun/moon icon) in the top right
 4. **Expected Result**:
    - Entire UI switches to dark colors
-   - Map tiles darken significantly (approximately 30% darker)
-   - Text switches to light colors
+   - Map tiles completely switch to CartoDB Dark Matter tileset
+   - Map shows professional dark gray/charcoal colors
+   - Roads and landmarks appear in light text
+   - Transition is smooth and instant
 
-#### Test 3b: Map Tiles Darken by 30%
-1. Take note of map appearance in light mode
-2. Toggle to dark mode
-3. **Expected Result**:
-   - Map tiles appear noticeably darker but still readable
-   - Tree colors, building colors, street details are visible but muted
-   - Not completely black, maintains visibility
-   - Routes remain clearly visible with good contrast
+#### Test 3b: Night-Mode Aesthetic is Professional
+1. Toggle dark mode on
+2. **Expected Result**:
+   - Map has true night-mode appearance
+   - Dark gray background with light-colored roads
+   - Building outlines and landmarks visible
+   - No dimming or filter overlay - actual night-themed tiles
+   - Much better for dark mode users (less eye strain)
 
 #### Test 3c: Routes Remain Visible in Dark Mode
-1. Generate routes
+1. Generate routes in light mode
 2. Toggle dark mode on
 3. **Expected Result**:
-   - Route colors remain vibrant and visible
-   - Good contrast between colored routes and darkened map
-   - No color collision or visibility issues
-   - Routes remain clickable
+   - Route colors remain vibrant and visible against dark background
+   - Excellent contrast between colored routes and dark tiles
+   - All four route colors (pink, purple, cyan, green) stand out
+   - Routes remain clickable and fully functional
 
 #### Test 3d: Markers Remain Visible in Dark Mode
 1. Generate routes with start and destination locations
 2. Toggle dark mode on
 3. **Expected Result**:
-   - Start marker (A) remains visible and readable
-   - Destination marker (B) remains visible and readable
-   - Marker icons and text are clear against dark map
-   - Popups display correctly
+   - Start marker (A) clearly visible against dark map
+   - Destination marker (B) clearly visible against dark map
+   - Marker colors (blue A, pink B) stand out nicely
+   - Popups display correctly with good contrast
 
-#### Test 3e: Dark Mode Setting Persists
+#### Test 3e: Light Mode Shows Bright Tiles
+1. Toggle dark mode off
+2. **Expected Result**:
+   - Map instantly switches to bright OpenStreetMap tiles
+   - Full color spectrum visible (greens, blues, yellows, etc.)
+   - Complete opposite of dark mode appearance
+   - Clean, daytime-optimized tileset
+
+#### Test 3f: Dark Mode Setting Persists
 1. Toggle dark mode on
 2. **First test**: Refresh the page (Cmd+R or F5)
    - **Expected Result**: Dark mode remains active after refresh
+   - Map still shows CartoDB Dark Matter tiles
 3. **Second test**: Close the browser tab and reopen the app
    - **Expected Result**: Dark mode setting is remembered (saved in localStorage)
+   - Map loads with dark tiles immediately
 
-#### Test 3f: Light Mode Restores Normal Tiles
-1. With dark mode active, click theme toggle again
-2. **Expected Result**:
-   - Map tiles return to normal brightness
-   - No filter or overlay visible
-   - UI switches back to light colors
-   - Everything appears exactly as it was before dark mode
+#### Test 3g: Tileset Switches Smoothly
+1. Generate routes
+2. Rapidly toggle dark mode multiple times
+3. **Expected Result**:
+   - Tileset switches instantly without errors
+   - No lag or visual artifacts
+   - Routes remain visible throughout transitions
+   - App responds smoothly to theme changes
 
-#### Test 3g: Dark Mode During Route Interaction
+#### Test 3h: Dark Mode During Route Interaction
 1. Generate routes
 2. Toggle dark mode
 3. Click on a route to open Google Maps
 4. **Expected Result**:
    - Google Maps opens in new tab
-   - Original app still shows dark map
+   - Original app still shows dark CartoDB tiles
    - All features work seamlessly in dark mode
+   - No console errors
 
 ---
 

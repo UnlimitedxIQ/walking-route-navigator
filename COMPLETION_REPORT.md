@@ -10,7 +10,7 @@ Successfully implemented three major features for the Walking Route Navigator ap
 
 1. ✅ **Display walking paths on the map** - Routes visualized as colored polylines
 2. ✅ **Click-to-open in Google Maps** - Routes clickable to open in Google Maps
-3. ✅ **Dark mode map darkening** - Map tiles darken 30% in dark mode
+3. ✅ **Dark mode with night-themed tileset** - Professional night-mode map (CartoDB Dark Matter)
 
 **Build Status**: ✅ Production build passes with zero errors
 **TypeScript Status**: ✅ All types correct, zero compilation errors
@@ -64,27 +64,29 @@ Successfully implemented three major features for the Walking Route Navigator ap
 
 ---
 
-### Feature 3: Dark Mode Map Darkening ✅
+### Feature 3: Dark Mode with Night-Themed Tileset ✅
 
 **Implementation:**
-- CSS brightness filter: `brightness(0.7)` applied to tile layer
-- Results in 30% darkening of map tiles
-- Applied dynamically based on dark mode state
-- Smooth transition between light and dark
+- Tileset switching: CartoDB Dark Matter in dark mode, OpenStreetMap in light mode
+- Professional night-mode aesthetic (not just dimmed tiles)
+- Smooth tileset switching with no visual artifacts
+- Dynamic tileset based on dark mode state
 
 **Technical Details:**
 - Dark mode state flows: `page.tsx` → `RouteMap` → `MapContent`
-- Dark overlay created/removed in effect hook
-- CSS filter applied to `.leaflet-tile` elements
+- Tileset switching in effect hook
+- Removes old tileset, adds new one when mode changes
 - Respects localStorage for persistence
+- CartoDB attribution included for proper licensing
 
 **Visual Effect:**
-- Map tiles visibly darker but still readable
-- Routes remain clearly visible
-- Markers and popups maintain visibility
-- Good contrast for dark mode users
+- Dark mode: Dark gray/charcoal tiles with light roads and landmarks
+- Light mode: Bright colorful OpenStreetMap tiles
+- Routes pop beautifully against both backgrounds
+- Markers and popups maintain excellent visibility
+- Designed specifically for dark mode (less eye strain)
 
-**Location:** `components/MapContent.tsx` (lines 84-113, 173-179)
+**Location:** `components/MapContent.tsx` (lines 43-87)
 
 ---
 
@@ -170,13 +172,14 @@ Successfully implemented three major features for the Walking Route Navigator ap
 - [x] URL format is valid
 - [x] Multiple clicks work without errors
 
-**Feature 3 - Dark Mode:**
-- [x] Dark mode toggle affects map
-- [x] Map tiles darken by ~30%
-- [x] Routes remain visible in dark mode
+**Feature 3 - Dark Mode with Night-Themed Tileset:**
+- [x] Dark mode toggle switches to CartoDB Dark Matter tileset
+- [x] Light mode shows standard OpenStreetMap tiles
+- [x] Tileset switching is smooth and instant
+- [x] Routes remain visible and pop against dark background
 - [x] Markers remain visible in dark mode
 - [x] Dark mode setting persists on refresh
-- [x] Light mode restores normal appearance
+- [x] Professional night-mode aesthetic (not just dimmed tiles)
 
 **Integration Testing:**
 - [x] All features work together
@@ -302,11 +305,13 @@ npm start
 - Responsive selection states
 - Seamless Google Maps integration
 
-### 🌓 Dark Mode
-- Elegant 30% map darkening
-- Readable text and routes
+### 🌓 Dark Mode with Night-Themed Tileset
+- Professional CartoDB Dark Matter tileset for dark mode
+- Standard OpenStreetMap for light mode
+- Proper night-mode aesthetic (designed for darkness)
+- Smooth tileset switching
+- Excellent contrast with route colors
 - Persistent user preference
-- Smooth theme transitions
 
 ---
 

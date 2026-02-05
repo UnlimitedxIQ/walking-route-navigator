@@ -53,28 +53,37 @@ Successfully implemented three major features for the Walking Route Navigator ap
 - `lib/routing.ts` - Lines 95-99 (generateGoogleMapsUrl function)
 - `components/MapContent.tsx` - Lines 122-127 (click handler)
 
-### 3. Dark Mode Map Darkening 🌙
+### 3. Dark Mode with Night-Themed Tileset 🌙
 **Status**: ✅ Complete
 
 **What it does:**
-- When dark mode is toggled on, Leaflet map tiles are darkened by 30%
-- CSS brightness filter: `brightness(0.7)` applied to tile layers
-- Light mode shows normal tiles
+- When dark mode is toggled on, the map switches to **CartoDB Dark Matter** tileset
+- Provides a proper night-mode aesthetic instead of just dimming tiles
+- Light mode uses standard OpenStreetMap bright tiles
+- Smooth tileset transition between modes
+
+**Visual Effect:**
+- **Light Mode**: Bright, colorful OpenStreetMap tiles
+- **Dark Mode**: Professional dark gray/charcoal CartoDB tiles with light text
+- Excellent contrast with route colors in both modes
+- Designed for nighttime viewing without eye strain
+- Roads, landmarks, and details optimized for dark backgrounds
 
 **Technical Implementation:**
 - Dark mode state flows: `page.tsx` → `RouteMap` → `MapContent`
-- CSS filter applied directly to `.leaflet-tile` elements
-- Dynamic styling based on `darkMode` prop
+- Tileset switching logic in effect hook
+- Stores reference to current tile layer
+- Removes old tileset and adds new one when mode changes
+- Uses CartoDB's high-quality dark map tiles
 
-**Visual Effect:**
-- 30% dimming of tile imagery (0.7 brightness = 30% darker)
-- Maintains map readability while matching dark theme
-- Smooth transition when toggling theme
+**Tilesets Used:**
+- **Light**: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+- **Dark**: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png`
 
 **Code Location:**
 - `app/page.tsx` - Passes `darkMode` prop to `RouteMap`
 - `components/RouteMap.tsx` - New `darkMode` prop, passes to `MapContent`
-- `components/MapContent.tsx` - Lines 173-179 (CSS filter application)
+- `components/MapContent.tsx` - Lines 43-87 (tileset switching effect)
 
 ## Files Modified
 

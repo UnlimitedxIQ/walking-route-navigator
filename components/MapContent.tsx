@@ -195,9 +195,6 @@ export default function MapContent({ darkMode = false }: MapContentProps) {
         #map .leaflet-interactive {
           cursor: pointer;
         }
-        #map .leaflet-tile {
-          filter: ${darkMode ? 'brightness(0.7)' : 'none'};
-        }
       `}</style>
     </div>
   );

@@ -101,56 +101,52 @@ interface MapContentProps {
 }
 
 export default function MapContent({ darkMode = false }: MapContentProps) {
-  // ... component code ...
-  const darkOverlayRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // ... other refs ...
 }
 ```
 
-#### 4b. Dark Mode Effect Hook
+#### 4b. Tileset Switching Effect Hook
 ```typescript
+// Switch tileset based on dark mode
 useEffect(() => {
-  const mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
+  if (!mapRef.current || !tileLayerRef.current) return;
+
+  // Remove current tile layer
+  mapRef.current.removeLayer(tileLayerRef.current);
 
   if (darkMode) {
-    // Remove existing overlay if any
-    const existingOverlay = mapContainer.querySelector('[data-dark-overlay]');
-    if (existingOverlay) {
-      existingOverlay.remove();
-    }
-
-    // Create dark overlay
-    const overlay = document.createElement('div');
-    overlay.setAttribute('data-dark-overlay', 'true');
-    overlay.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
-      pointer-events: none;
-      z-index: 400;
-      border-radius: inherit;
-    `;
-    mapContainer.appendChild(overlay);
-    darkOverlayRef.current = overlay;
+    // Use CartoDB Dark Matter tileset for night mode
+    tileLayerRef.current = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 19,
+        subdomains: 'abcd',
+      }
+    ).addTo(mapRef.current);
   } else {
-    // Remove dark overlay
-    const overlay = mapContainer.querySelector('[data-dark-overlay]');
-    if (overlay) {
-      overlay.remove();
-    }
-    darkOverlayRef.current = null;
+    // Use standard OpenStreetMap for light mode
+    tileLayerRef.current = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }
+    ).addTo(mapRef.current);
   }
 }, [darkMode]);
 ```
 
 **Purpose:**
-- Creates/removes dark overlay when mode changes
-- Applies semi-transparent black overlay (30% darkness)
-- Uses CSS filter approach for efficient rendering
-- Cleans up properly when toggling
+- Switches tileset when dark mode changes
+- Removes old tileset and adds new one
+- Uses CartoDB Dark Matter for professional night-mode appearance
+- Maintains tileset reference for clean switching
+- Provides smooth, seamless theme transitions
 
 #### 4c. Route Rendering with Click Handler
 ```typescript
@@ -211,19 +207,15 @@ return (
       #map .leaflet-interactive {
         cursor: pointer;
       }
-      #map .leaflet-tile {
-        filter: ${darkMode ? 'brightness(0.7)' : 'none'};
-      }
     `}</style>
   </div>
 );
 ```
 
 **Purpose:**
-- Changes cursor to pointer for interactive elements
-- Applies brightness filter to tiles when dark mode is active
-- Dynamic styling based on darkMode state
-- Uses CSS filters for performance
+- Changes cursor to pointer for interactive route elements
+- Indicates that routes are clickable
+- Provides visual feedback to users
 
 ---
 
@@ -246,14 +238,15 @@ MapContent (applies darkMode to map)
 
 ### 2. Dark Mode Implementation
 **Two approaches considered:**
-1. ❌ Global CSS class changes (affects entire page)
-2. ✅ CSS filter on tile layer (efficient, isolated)
+1. ❌ CSS brightness filter on current tiles (dims but doesn't look like night mode)
+2. ✅ Tileset switching (CartoDB Dark Matter for dark, OSM for light)
 
-**Chosen: CSS filter on `.leaflet-tile`**
-- Applied only to map tiles
-- No effect on markers or overlays
-- Efficient rendering (GPU-accelerated)
-- Easy to adjust brightness value
+**Chosen: Tileset Switching**
+- Professional night-mode aesthetic with dedicated dark tiles
+- CartoDB Dark Matter provides designed-for-dark-mode appearance
+- Smooth tileset transitions between modes
+- Excellent contrast with route colors in both modes
+- Better for dark mode users (less eye strain, designed specifically for nighttime)
 
 ### 3. Route Polyline Styling
 **Strategy:**
