@@ -5,13 +5,10 @@ import { RouteMap } from '@/components/RouteMap';
 import { LocationInput } from '@/components/LocationInput';
 import { RoutePanel } from '@/components/RoutePanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useRouteStore } from '@/lib/store';
-import dynamic from 'next/dynamic';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const { origin, destination } = useRouteStore();
 
   useEffect(() => {
     setMounted(true);
@@ -73,7 +70,7 @@ export default function Home() {
 
         {/* Right Panel - Map */}
         <div className="w-full md:flex-1 h-1/2 md:h-full relative">
-          <RouteMap />
+          <RouteMap darkMode={darkMode} />
         </div>
       </div>
     </div>

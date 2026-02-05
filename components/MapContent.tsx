@@ -3,15 +3,9 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useRouteStore } from '@/lib/store';
+import { generateGoogleMapsUrl } from '@/lib/routing';
 
-// Fix for default marker icons in Leaflet
-const defaultIcon = L.icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iIzY0YzhmZiIvPjxjaXJjbGUgY3g9IjI0IiBjeT0iMjQiIHI9IjEyIiBmaWxsPSIjZmZmIi8+PC9zdmc+',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
-
+// Origin marker icon
 const originIcon = L.icon({
   iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iIzRGQ0FFRiIvPjx0ZXh0IHg9IjI0IiB5PSIzMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9ImJvbGQiPkE8L3RleHQ+PC9zdmc+',
   iconSize: [32, 32],
@@ -26,10 +20,15 @@ const destIcon = L.icon({
   popupAnchor: [0, -32],
 });
 
-export default function MapContent() {
+interface MapContentProps {
+  darkMode?: boolean;
+}
+
+export default function MapContent({ darkMode = false }: MapContentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const markerLayersRef = useRef<L.Marker[]>([]);
+  const darkOverlayRef = useRef<HTMLDivElement | null>(null);
   const { origin, destination, routes, selectedRouteId } = useRouteStore();
 
   // Initialize map
@@ -54,6 +53,44 @@ export default function MapContent() {
     };
   }, []);
 
+  // Apply dark mode filter to map
+  useEffect(() => {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) return;
+
+    if (darkMode) {
+      // Remove existing overlay if any
+      const existingOverlay = mapContainer.querySelector('[data-dark-overlay]');
+      if (existingOverlay) {
+        existingOverlay.remove();
+      }
+
+      // Create dark overlay
+      const overlay = document.createElement('div');
+      overlay.setAttribute('data-dark-overlay', 'true');
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        pointer-events: none;
+        z-index: 400;
+        border-radius: inherit;
+      `;
+      mapContainer.appendChild(overlay);
+      darkOverlayRef.current = overlay;
+    } else {
+      // Remove dark overlay
+      const overlay = mapContainer.querySelector('[data-dark-overlay]');
+      if (overlay) {
+        overlay.remove();
+      }
+      darkOverlayRef.current = null;
+    }
+  }, [darkMode]);
+
   // Update routes on map
   useEffect(() => {
     if (!mapRef.current) return;
@@ -75,9 +112,27 @@ export default function MapContent() {
         lineJoin: 'round',
       }).addTo(mapRef.current!);
 
-      // Add hover effect
+      // Add click handler to open Google Maps
       polyline.on('click', () => {
-        // Trigger route selection in store
+        if (origin && destination) {
+          const mapsUrl = generateGoogleMapsUrl(origin, destination);
+          window.open(mapsUrl, '_blank');
+        }
+      });
+
+      // Add hover effects
+      polyline.on('mouseover', () => {
+        polyline.setStyle({
+          weight: 6,
+          opacity: 1,
+        });
+      });
+
+      polyline.on('mouseout', () => {
+        polyline.setStyle({
+          weight: isSelected ? 5 : 3,
+          opacity: isSelected ? 1 : 0.6,
+        });
       });
 
       routeLayersRef.current.push(polyline);
@@ -92,7 +147,7 @@ export default function MapContent() {
         console.log('Could not fit bounds');
       }
     }
-  }, [routes, selectedRouteId]);
+  }, [routes, selectedRouteId, origin, destination]);
 
   // Update markers
   useEffect(() => {
@@ -137,8 +192,19 @@ export default function MapContent() {
   }, [origin, destination, routes]);
 
   return (
-    <div id="map" className="w-full h-full rounded-none md:rounded-l-xl">
+    <div 
+      id="map" 
+      className="w-full h-full rounded-none md:rounded-l-xl relative"
+    >
       {/* Map container */}
+      <style>{`
+        #map .leaflet-interactive {
+          cursor: pointer;
+        }
+        #map .leaflet-tile {
+          filter: ${darkMode ? 'brightness(0.7)' : 'none'};
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { Location, Route, Instruction } from './store';
 
 const OSRM_BASE_URL = 'https://router.project-osrm.org';
@@ -25,19 +24,15 @@ const mockRoutes = {
 
 export async function searchLocation(query: string): Promise<Location[]> {
   try {
-    const response = await axios.get(`${NOMINATIM_BASE_URL}/search`, {
-      params: {
-        q: query,
-        format: 'json',
-        limit: 5,
-      },
-    });
+    const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      console.error('Location search failed:', response.status);
+      return [];
+    }
 
-    return response.data.map((result: any) => ({
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-      name: result.display_name,
-    }));
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('Location search error:', error);
     return [];
@@ -46,18 +41,16 @@ export async function searchLocation(query: string): Promise<Location[]> {
 
 export async function getReverseGeocode(lat: number, lng: number): Promise<string> {
   try {
-    const response = await axios.get(`${NOMINATIM_BASE_URL}/reverse`, {
-      params: {
-        lat,
-        lon: lng,
-        format: 'json',
-      },
-    });
-    return response.data.address?.city ||
-           response.data.address?.town ||
-           response.data.address?.village ||
-           `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    const response = await fetch(`/api/location/reverse?lat=${lat}&lon=${lng}`);
+    
+    if (!response.ok) {
+      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+
+    const data = await response.json();
+    return data.name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   } catch (error) {
+    console.error('Reverse geocoding error:', error);
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 }
@@ -185,6 +178,12 @@ export function shareRoute(route: Route, origin: Location, destination: Location
     destination: `${destination.lat},${destination.lng}`,
   });
   return `${baseUrl}?${params.toString()}`;
+}
+
+export function generateGoogleMapsUrl(origin: Location, destination: Location): string {
+  const originStr = `${origin.lat},${origin.lng}`;
+  const destinationStr = `${destination.lat},${destination.lng}`;
+  return `https://www.google.com/maps/dir/?api=1&origin=${originStr}&destination=${destinationStr}`;
 }
 
 export function calculateElevationProfile(coordinates: [number, number][]): { distance: number; elevation: number }[] {

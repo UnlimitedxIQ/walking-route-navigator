@@ -7,7 +7,11 @@ import { useRouteStore } from '@/lib/store';
 // Dynamic import for Leaflet to avoid SSR issues
 const MapContent = dynamic(() => import('./MapContent'), { ssr: false });
 
-export function RouteMap() {
+interface RouteMapProps {
+  darkMode?: boolean;
+}
+
+export function RouteMap({ darkMode = false }: RouteMapProps) {
   const { loadFavorites } = useRouteStore();
 
   useEffect(() => {
@@ -16,7 +20,7 @@ export function RouteMap() {
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-gray-800 dark:to-gray-900">
-      <MapContent />
+      <MapContent darkMode={darkMode} />
     </div>
   );
 }
